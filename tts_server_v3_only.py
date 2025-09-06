@@ -123,7 +123,7 @@ async def synthesize_with_elevenlabs_v3(text: str, voice_settings: Optional[Dict
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}/stream"
 
         default_voice_settings = {
-            "stability": 0.75,
+            "stability": 0.5,
             "similarity_boost": 0.85,
             "style": 0.6,
             "use_speaker_boost": True
@@ -132,11 +132,11 @@ async def synthesize_with_elevenlabs_v3(text: str, voice_settings: Optional[Dict
         if voice_settings:
             default_voice_settings.update(voice_settings)
 
-        # Ensure stability is valid for ElevenLabs
-        stability = default_voice_settings.get("stability", 0.75)
-        if stability not in [0.0, 0.25, 0.5, 0.75, 1.0]:
-            logger.warning(f"Invalid stability value {stability}, defaulting to 0.75")
-            default_voice_settings["stability"] = 0.75
+        # Ensure stability is valid for ElevenLabs V3
+        stability = default_voice_settings.get("stability", 0.5)
+        if stability not in [0.0, 0.5, 1.0]:
+            logger.warning(f"Invalid stability value {stability}, defaulting to 0.5")
+            default_voice_settings["stability"] = 0.5
 
         payload = {
             "text": text,
