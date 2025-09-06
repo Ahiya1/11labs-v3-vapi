@@ -1,0 +1,14 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "uvicorn tts_server:app --host 0.0.0.0 --port $PORT"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[environments.production]
+OPENAI_REALTIME_MODEL = "gpt-realtime"
+OPENAI_REALTIME_VOICE = "alloy"
+ELEVENLABS_MODEL_ID = "eleven_v3"
+SERVER_HOST = "0.0.0.0"
+ENVIRONMENT = "production"
