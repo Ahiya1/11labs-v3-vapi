@@ -1,1 +1,1 @@
-web: uvicorn tts_server:app --host 0.0.0.0 --port $PORT
+web: uvicorn tts_server_v3_only:app --host 0.0.0.0 --port $PORT
