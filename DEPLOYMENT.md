@@ -1,16 +1,17 @@
 # 🚀 Deployment Guide
 
-Complete deployment guide for the Vapi Hebrew Assistant TTS Server.
+Complete deployment guide for the Vapi Hebrew Assistant TTS Server with enhanced configuration.
 
 ## 📋 Pre-Deployment Checklist
 
 - [ ] All API keys obtained and tested
 - [ ] `.env` file configured with production values
+- [ ] **NEW**: Model configuration variables set
 - [ ] Server tested locally with `python test_server.py`
 - [ ] Domain name ready (if using custom domain)
 - [ ] SSL certificate plan in place
 
-## 🌐 Deployment Options
+## 🌍 Deployment Options
 
 ### Option 1: Railway (Recommended for beginners)
 
@@ -33,16 +34,24 @@ git push origin main
 
 #### Step 3: Set Environment Variables
 
-In Railway dashboard:
-1. Go to your project → Variables tab
-2. Add all variables from your `.env` file:
+In Railway dashboard → Variables tab, add **ALL** these variables:
 
-```
+```bash
+# OpenAI Configuration
 OPENAI_API_KEY=sk-proj-your-key...
+OPENAI_REALTIME_MODEL=gpt-realtime
+OPENAI_REALTIME_VOICE=alloy
+
+# ElevenLabs Configuration  
 ELEVENLABS_API_KEY=sk_your-key...
 ELEVENLABS_VOICE_ID=your-voice-id
+ELEVENLABS_MODEL_ID=eleven_v3
+
+# Vapi Configuration
 VAPI_PRIVATE_KEY=your-vapi-key
 VAPI_SECRET=your-custom-secret
+
+# Server Configuration
 SERVER_PORT=8000
 ```
 
@@ -58,7 +67,13 @@ In Railway dashboard → Settings:
 2. Test your deployment:
 
 ```bash
+# Test health check
 curl https://your-app-name.railway.app/health
+
+# Test v3 mode
+curl -X POST https://your-app-name.railway.app/test \
+  -H "Content-Type: application/json" \
+  -d '{"message": "שלום עולם", "mode": "v3"}'
 ```
 
 ---
@@ -82,14 +97,24 @@ curl https://your-app-name.railway.app/health
 
 #### Step 3: Environment Variables
 
-In Render dashboard → Environment:
+In Render dashboard → Environment, add **ALL** these variables:
 
-```
+```bash
+# OpenAI Configuration
 OPENAI_API_KEY=sk-proj-your-key...
+OPENAI_REALTIME_MODEL=gpt-realtime
+OPENAI_REALTIME_VOICE=alloy
+
+# ElevenLabs Configuration
 ELEVENLABS_API_KEY=sk_your-key...
 ELEVENLABS_VOICE_ID=your-voice-id
+ELEVENLABS_MODEL_ID=eleven_v3
+
+# Vapi Configuration
 VAPI_PRIVATE_KEY=your-vapi-key
 VAPI_SECRET=your-custom-secret
+
+# Server Configuration
 PORT=10000
 ```
 
@@ -134,9 +159,33 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Create .env file
+# Create .env file with ALL required variables
 nano .env
-# Add your environment variables here
+```
+
+**Complete .env template for production:**
+
+```bash
+# OpenAI Configuration
+OPENAI_API_KEY=sk-proj-your-actual-key
+OPENAI_REALTIME_MODEL=gpt-realtime
+OPENAI_REALTIME_VOICE=alloy
+
+# ElevenLabs Configuration
+ELEVENLABS_API_KEY=sk_your-actual-key
+ELEVENLABS_VOICE_ID=your-actual-voice-id
+ELEVENLABS_MODEL_ID=eleven_v3
+
+# Vapi Configuration
+VAPI_PRIVATE_KEY=your-actual-vapi-key
+VAPI_SECRET=your-strong-custom-secret-here
+
+# Server Configuration
+SERVER_PORT=8000
+SERVER_HOST=127.0.0.1
+
+# Environment
+ENVIRONMENT=production
 ```
 
 #### Step 3: Create Systemd Service
@@ -251,7 +300,18 @@ sudo ufw status
 
 #### Step 2: Environment Variables
 
-Add in App Platform dashboard → Settings → Environment Variables.
+Add **ALL** these environment variables in App Platform dashboard:
+
+```bash
+OPENAI_API_KEY=sk-proj-your-key...
+OPENAI_REALTIME_MODEL=gpt-realtime
+OPENAI_REALTIME_VOICE=alloy
+ELEVENLABS_API_KEY=sk_your-key...
+ELEVENLABS_VOICE_ID=your-voice-id
+ELEVENLABS_MODEL_ID=eleven_v3
+VAPI_PRIVATE_KEY=your-vapi-key
+VAPI_SECRET=your-custom-secret
+```
 
 #### Step 3: Deploy
 
@@ -267,7 +327,7 @@ App Platform will automatically build and deploy.
 
 1. Go to Vapi Dashboard → Assistants
 2. Find your assistant or create new one
-3. Update the voice configuration:
+3. **For ElevenLabs v3 Mode (Expressive Quality)**:
 
 ```json
 {
@@ -281,7 +341,37 @@ App Platform will automatically build and deploy.
     },
     "body": {
       "message": "{{message}}",
-      "mode": "v3"
+      "mode": "v3",
+      "voice_settings": {
+        "style": 0.6,
+        "stability": 0.75,
+        "similarity_boost": 0.85,
+        "use_speaker_boost": true
+      }
+    }
+  }
+}
+```
+
+4. **For OpenAI Realtime Mode (Low-Latency)**:
+
+```json
+{
+  "voice": {
+    "provider": "custom-voice",
+    "url": "https://YOUR-DEPLOYED-URL.com/synthesize",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "X-VAPI-SECRET": "your-vapi-secret-here"
+    },
+    "body": {
+      "message": "{{message}}",
+      "mode": "realtime",
+      "voice_settings": {
+        "voice": "alloy",
+        "speed": 1.0
+      }
     }
   }
 }
@@ -293,21 +383,7 @@ App Platform will automatically build and deploy.
 curl -X PATCH https://api.vapi.ai/assistant/YOUR_ASSISTANT_ID \
   -H "Authorization: Bearer YOUR_VAPI_PRIVATE_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "voice": {
-      "provider": "custom-voice",
-      "url": "https://YOUR-DEPLOYED-URL.com/synthesize",
-      "method": "POST",
-      "headers": {
-        "Content-Type": "application/json",
-        "X-VAPI-SECRET": "your-vapi-secret-here"
-      },
-      "body": {
-        "message": "{{message}}",
-        "mode": "v3"
-      }
-    }
-  }'
+  -d @vapi_assistant_config.json
 ```
 
 ### 2. Test Deployment
@@ -316,10 +392,22 @@ curl -X PATCH https://api.vapi.ai/assistant/YOUR_ASSISTANT_ID \
 # Test health endpoint
 curl https://YOUR-DEPLOYED-URL.com/health
 
-# Test synthesis
+# Test both modes
 curl -X POST https://YOUR-DEPLOYED-URL.com/test \
   -H "Content-Type: application/json" \
-  -d '{"message": "שלום עולם", "mode": "v3"}'
+  -d '{
+    "message": "שלום עולם", 
+    "mode": "v3",
+    "voice_settings": {"style": 0.6}
+  }'
+
+curl -X POST https://YOUR-DEPLOYED-URL.com/test \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "בדיקה מהירה", 
+    "mode": "realtime",
+    "voice_settings": {"voice": "alloy"}
+  }'
 ```
 
 ### 3. Create Test Call
@@ -327,6 +415,7 @@ curl -X POST https://YOUR-DEPLOYED-URL.com/test \
 1. Go to Vapi Dashboard → Assistants
 2. Click your assistant → "Test Call"
 3. Speak in Hebrew and verify the assistant responds correctly
+4. Test both voice modes if you have multiple assistants
 
 ---
 
@@ -345,6 +434,13 @@ RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $URL)
 
 if [ $RESPONSE -eq 200 ]; then
     echo "$(date): Server is healthy"
+    # Check if response contains expected content
+    HEALTH=$(curl -s $URL | jq -r '.status')
+    if [ "$HEALTH" = "healthy" ]; then
+        echo "$(date): Health check passed with status: healthy"
+    else
+        echo "$(date): Health check returned unexpected status: $HEALTH"
+    fi
 else
     echo "$(date): Server is down! Response: $RESPONSE"
     # Add notification logic here (email, Slack, etc.)
@@ -358,6 +454,50 @@ crontab -e
 # Add line: */5 * * * * /path/to/monitor.sh >> /var/log/tts-monitor.log 2>&1
 ```
 
+#### Advanced Monitoring with Voice Mode Testing
+
+```bash
+# Create comprehensive test script
+tee health_check.sh > /dev/null <<EOF
+#!/bin/bash
+SERVER_URL="https://YOUR-DEPLOYED-URL.com"
+TEST_MESSAGE="בדיקת מערכת"
+
+echo "$(date): Testing server health..."
+
+# Test health endpoint
+HEALTH_STATUS=$(curl -s "$SERVER_URL/health" | jq -r '.status')
+if [ "$HEALTH_STATUS" != "healthy" ]; then
+    echo "$(date): ERROR - Health check failed"
+    exit 1
+fi
+
+# Test v3 mode
+V3_TEST=$(curl -s -X POST "$SERVER_URL/test" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "'$TEST_MESSAGE'", "mode": "v3"}' | jq -r '.success')
+
+if [ "$V3_TEST" != "true" ]; then
+    echo "$(date): ERROR - v3 mode test failed"
+    exit 1
+fi
+
+# Test realtime mode
+RT_TEST=$(curl -s -X POST "$SERVER_URL/test" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "'$TEST_MESSAGE'", "mode": "realtime"}' | jq -r '.success')
+
+if [ "$RT_TEST" != "true" ]; then
+    echo "$(date): ERROR - realtime mode test failed"
+    exit 1
+fi
+
+echo "$(date): All tests passed successfully"
+EOF
+
+chmod +x health_check.sh
+```
+
 #### UptimeRobot Setup
 
 1. Go to [UptimeRobot.com](https://uptimerobot.com)
@@ -365,6 +505,7 @@ crontab -e
    - **Type**: HTTP(s)
    - **URL**: `https://YOUR-DEPLOYED-URL.com/health`
    - **Interval**: 5 minutes
+   - **Alert Contacts**: Add your email/SMS
 
 ### Log Management
 
@@ -373,6 +514,9 @@ crontab -e
 ```bash
 # View service logs
 sudo journalctl -u tts-server -f
+
+# View recent logs
+sudo journalctl -u tts-server -n 100
 
 # View Nginx logs
 sudo tail -f /var/log/nginx/access.log
@@ -400,6 +544,7 @@ EOF
 - **Railway**: Check logs in dashboard → Deployments tab
 - **Render**: Check logs in dashboard → Logs tab
 - **Heroku**: Use `heroku logs --tail -a your-app-name`
+- **DigitalOcean**: Check Runtime Logs in app dashboard
 
 ### Performance Optimization
 
@@ -407,29 +552,53 @@ EOF
 
 ```nginx
 # Add to your Nginx configuration
-gzip on;
-gzip_types text/plain application/json;
-gzip_min_length 1000;
+http {
+    gzip on;
+    gzip_types text/plain application/json;
+    gzip_min_length 1000;
+    
+    # Add caching for static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
 ```
 
-#### 2. Connection Pooling
-
-The server already uses `httpx.AsyncClient` with connection pooling.
-
-#### 3. Rate Limiting (Nginx)
+#### 2. Rate Limiting (Nginx)
 
 ```nginx
 # Add to nginx.conf http block
 http {
+    # Rate limiting zones
     limit_req_zone $binary_remote_addr zone=tts:10m rate=10r/m;
+    limit_req_zone $binary_remote_addr zone=health:10m rate=30r/m;
     
     server {
         location /synthesize {
             limit_req zone=tts burst=5 nodelay;
             # ... rest of config
         }
+        
+        location /health {
+            limit_req zone=health burst=10 nodelay;
+            # ... rest of config
+        }
     }
 }
+```
+
+#### 3. Environment-Specific Optimizations
+
+```bash
+# Add to .env for production
+ENVIRONMENT=production
+LOG_LEVEL=INFO
+
+# Optimize for your platform
+# Railway: Ensure you're on the right plan for your usage
+# Render: Consider upgrading from free tier for better performance
+# VPS: Monitor CPU/memory usage and scale accordingly
 ```
 
 ---
@@ -438,7 +607,24 @@ http {
 
 ### Common Problems
 
-#### 1. "Port already in use"
+#### 1. "Missing environment variable" errors
+
+```bash
+# Check which variables are missing
+curl https://YOUR-DEPLOYED-URL.com/health
+
+# Verify all required variables are set:
+echo "Required variables:"
+echo "- OPENAI_API_KEY"
+echo "- OPENAI_REALTIME_MODEL (default: gpt-realtime)"
+echo "- OPENAI_REALTIME_VOICE (default: alloy)"
+echo "- ELEVENLABS_API_KEY"
+echo "- ELEVENLABS_VOICE_ID"
+echo "- ELEVENLABS_MODEL_ID (default: eleven_v3)"
+echo "- VAPI_SECRET"
+```
+
+#### 2. "Port already in use" (VPS)
 
 ```bash
 # Find process using port 8000
@@ -451,7 +637,7 @@ sudo kill -9 PID
 SERVER_PORT=8080
 ```
 
-#### 2. "Permission denied" on VPS
+#### 3. "Permission denied" on VPS
 
 ```bash
 # Fix ownership
@@ -461,45 +647,58 @@ sudo chown -R ttsserver:ttsserver /home/ttsserver/vapi-hebrew-assistant
 chmod +x /home/ttsserver/vapi-hebrew-assistant/start_server.py
 ```
 
-#### 3. "SSL Certificate Error"
+#### 4. "Model not found" errors
 
 ```bash
-# Renew certificate
-sudo certbot renew
+# Check if environment variables are properly set
+# For ElevenLabs
+curl -H "xi-api-key: YOUR_API_KEY" https://api.elevenlabs.io/v1/voices
 
-# Check certificate status
-sudo certbot certificates
-```
-
-#### 4. "502 Bad Gateway" (Nginx)
-
-```bash
-# Check if service is running
-sudo systemctl status tts-server
-
-# Check nginx configuration
-sudo nginx -t
-
-# Check logs
-sudo journalctl -u tts-server -n 50
+# For OpenAI - verify Realtime access
+curl -H "Authorization: Bearer YOUR_OPENAI_KEY" \
+     https://api.openai.com/v1/models | grep realtime
 ```
 
 ### Platform-Specific Issues
 
 #### Railway
-- **Build fails**: Check Python version in requirements.txt
-- **App crashes**: Check environment variables are set correctly
-- **Timeout**: Increase timeout in Railway settings
+- **Build fails**: Check Python version matches `runtime.txt` if present
+- **Environment variables not loaded**: Ensure they're set in Railway dashboard, not just `.env`
+- **Timeout errors**: Consider upgrading plan for better performance
 
 #### Render
-- **Free tier limitations**: 750 hours/month, spins down after 15 minutes
-- **Build time**: Can be slow, upgrade for faster builds
-- **Memory limits**: 512MB on free tier
+- **Free tier sleep**: App sleeps after 15 minutes of inactivity
+- **Build time**: Can be slow on free tier, consider upgrading
+- **Memory limits**: 512MB on free tier, may need upgrade for heavy usage
 
 #### VPS
-- **Out of memory**: Add swap space or upgrade server
-- **Disk space**: Clean logs regularly
-- **Network issues**: Check firewall and security groups
+- **Firewall blocking**: Check UFW/iptables rules
+- **SSL certificate issues**: Verify domain DNS is pointing correctly
+- **Service crashes**: Check logs with `journalctl -u tts-server -f`
+
+### Voice Mode Specific Issues
+
+#### Realtime Mode Issues
+```bash
+# Test OpenAI Realtime access
+curl -H "Authorization: Bearer $OPENAI_API_KEY" \
+     -H "OpenAI-Beta: realtime=v1" \
+     "https://api.openai.com/v1/realtime?model=gpt-realtime"
+
+# Check if your key has Realtime access
+echo "If you get a 401/403 error, request Realtime API access from OpenAI"
+```
+
+#### ElevenLabs v3 Issues
+```bash
+# Test ElevenLabs API access
+curl -H "xi-api-key: $ELEVENLABS_API_KEY" \
+     "https://api.elevenlabs.io/v1/user"
+
+# Check if voice ID exists
+curl -H "xi-api-key: $ELEVENLABS_API_KEY" \
+     "https://api.elevenlabs.io/v1/voices/$ELEVENLABS_VOICE_ID"
+```
 
 ---
 
@@ -507,38 +706,50 @@ sudo journalctl -u tts-server -n 50
 
 ### Pre-Launch
 
-- [ ] All environment variables configured
+- [ ] All environment variables configured (including NEW model variables)
 - [ ] SSL certificate installed and working
-- [ ] Health endpoint returns 200
-- [ ] Both v3 and realtime modes tested
-- [ ] Hebrew text synthesis tested
+- [ ] Health endpoint returns 200 with correct API versions
+- [ ] Both v3 and realtime modes tested with Hebrew content
+- [ ] Voice settings optimized for Hebrew
 - [ ] Vapi assistant configured with correct URL
 - [ ] Test call completed successfully
+- [ ] Monitoring setup (UptimeRobot/custom)
 
 ### Security
 
 - [ ] API keys secured and not in code
-- [ ] VAPI_SECRET is unique and strong
-- [ ] HTTPS enforced everywhere
+- [ ] `VAPI_SECRET` is unique and strong (minimum 20 characters)
+- [ ] HTTPS enforced everywhere  
 - [ ] Rate limiting enabled
 - [ ] Server access restricted (SSH keys, etc.)
+- [ ] Firewall configured properly
 
-### Monitoring
+### Performance
 
-- [ ] Health monitoring setup (UptimeRobot/Pingdom)
-- [ ] Log aggregation configured
-- [ ] Error alerting enabled
-- [ ] Performance metrics tracking
+- [ ] Both voice modes tested for latency
+- [ ] Voice quality compared between modes
+- [ ] Rate limiting configured appropriately
+- [ ] Log rotation setup
+- [ ] Resource monitoring in place
 
 ### Documentation
 
 - [ ] Team has access to deployment credentials
+- [ ] Environment variable documentation updated
+- [ ] Voice mode selection guide available
 - [ ] Runbook created for common issues
 - [ ] Emergency contact list prepared
 - [ ] Backup/restore procedures documented
 
 ---
 
-**🎉 Congratulations! Your Hebrew Assistant is now live and ready to take calls!**
+**🎉 Congratulations! Your Enhanced Hebrew Assistant is now live and ready for production!**
 
-For ongoing support, monitor your logs regularly and keep your dependencies updated.
+### 📊 Key Improvements in This Version:
+- ✨ **Environment-driven configuration** - No more hardcoded values
+- ✨ **Model selection flexibility** - Easy switching between ElevenLabs models
+- ✨ **Voice customization** - Configurable voice settings per mode
+- ✨ **Enhanced monitoring** - Better health checks and testing
+- ✨ **Production-ready** - Comprehensive deployment and maintenance guide
+
+For ongoing support, monitor your logs regularly, keep your dependencies updated, and don't forget to test both voice modes regularly to ensure optimal performance.

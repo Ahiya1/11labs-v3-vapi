@@ -1,5 +1,5 @@
 {
-  "name": "Hebrew Sales Assistant - Realtime Voice",
+  "name": "Hebrew Sales Assistant - OpenAI Realtime (Low-Latency)",
   "firstMessage": "שלום! אני דן כהן, הסוכן שלכם למכירות. איך אני יכול לעזור לכם היום?",
   "model": {
     "provider": "openai",
@@ -14,11 +14,11 @@
   },
   "voice": {
     "provider": "custom-voice",
-    "url": "https://your-server-domain.com/synthesize",
+    "url": "https://your-deployed-domain.com/synthesize",
     "method": "POST",
     "headers": {
       "Content-Type": "application/json",
-      "X-VAPI-SECRET": "your-vapi-secret-here"
+      "X-VAPI-SECRET": "${VAPI_SECRET}"
     },
     "body": {
       "message": "{{message}}",

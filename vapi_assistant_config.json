@@ -1,5 +1,5 @@
 {
-  "name": "Hebrew Sales Assistant - Dynamic Voice",
+  "name": "Hebrew Sales Assistant - ElevenLabs v3 (Expressive Quality)",
   "firstMessage": "שלום! אני דן כהן, הסוכן שלכם למכירות. איך אני יכול לעזור לכם היום?",
   "model": {
     "provider": "openai",
@@ -14,15 +14,21 @@
   },
   "voice": {
     "provider": "custom-voice",
-    "url": "https://your-server-domain.com/synthesize",
+    "url": "https://your-deployed-domain.com/synthesize",
     "method": "POST",
     "headers": {
       "Content-Type": "application/json",
-      "X-VAPI-SECRET": "your-vapi-secret-here"
+      "X-VAPI-SECRET": "${VAPI_SECRET}"
     },
     "body": {
       "message": "{{message}}",
-      "mode": "v3"
+      "mode": "v3",
+      "voice_settings": {
+        "style": 0.6,
+        "stability": 0.75,
+        "similarity_boost": 0.85,
+        "use_speaker_boost": true
+      }
     }
   },
   "transcriber": {
